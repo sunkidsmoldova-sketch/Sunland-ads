@@ -775,13 +775,16 @@ Lasă-ne numărul — managerul te sună, răspunde la tot și îți spune câte
   </ul>
 
   <div class="pair">
-    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">В рабочее время</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Передаю менеджеру — он ответит точнее и позвонит тебе.
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Передача менеджеру</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Передаю менеджеру — он ответит точнее и позвонит тебе сегодня.
 
 Оставь, пожалуйста, номер телефона 👇</div></div>
-    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Нерабочее время</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Менеджер на связи с {{рабочие_часы}} — он позвонит тебе первым делом.
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Redirecționare</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Te conectez cu managerul — el răspunde mai exact și te sună astăzi.
 
-Оставь номер, чтобы он сразу знал, кому звонить 👇
-А пока могу ответить на всё, что знаю — спрашивай.</div></div>
+Lasă-ne, te rog, numărul de telefon 👇</div></div>
+  </div>
+  <div class="note">
+    <div class="label">Почему без разбивки на рабочее / нерабочее время</div>
+    <p>Единая формулировка «позвонит сегодня» вместо условия по часам работы. Часы менеджера боту не сообщаются и в тексте не упоминаются — обещание одно и то же в любое время суток.</p>
   </div>
 
   <h4>Технические требования к шагу передачи</h4>
@@ -896,11 +899,6 @@ Lasă-ne numărul — managerul te sună, răspunde la tot și îți spune câte
     <p class="col" style="color:var(--ink-2);">Не блокируют запуск ядра: по текущему решению эти темы уходят менеджеру на телефон. Но каждый заполненный пункт — это диалог, который бот закроет сам, без ожидания звонка.</p>
   </div>
   <div class="grid2">
-    <div class="rule-card" style="border-left-color:var(--accent-line);">
-      <div class="n" style="color:var(--accent);">ТРЕБУЕТСЯ</div>
-      <h4>Рабочие часы менеджера</h4>
-      <p style="font-size:.9rem; color:var(--ink-2);">Подставляется в <code>{{рабочие_часы}}</code>. Нужны реальные, а не желаемые — бот обещает звонок именно в этом окне.</p>
-    </div>
     <div class="rule-card" style="border-left-color:var(--accent-line);">
       <div class="n" style="color:var(--accent);">ЖЕЛАТЕЛЬНО</div>
       <h4>Оплата и предоплата</h4>
