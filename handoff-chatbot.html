@@ -1,0 +1,942 @@
+<title>SunLand · Техническое задание на чат-бот</title>
+
+<style>
+  :root{
+    --paper:#F7F8F8; --surface:#FFFFFF; --surface-2:#FBFCFC;
+    --ink:#16242A; --ink-2:#4A5A60; --ink-3:#6E7F84;
+    --rule:#DCE3E4; --rule-strong:#C3CFD1;
+    --accent:#0E6B77; --accent-soft:#E4F0F1; --accent-line:#9CC7CC;
+    --warn:#9C6614; --warn-soft:#FAF0DD; --warn-line:#E0BE85;
+    --crit:#9E352D; --crit-soft:#FAE7E5; --crit-line:#E2A9A3;
+    --ok:#356B48; --ok-soft:#E3F0E8; --ok-line:#A2C7AF;
+    --shadow:0 1px 2px rgba(22,36,42,.05), 0 8px 24px -16px rgba(22,36,42,.28);
+    --font-display:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;
+    --font-body:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0F1719; --surface:#162124; --surface-2:#1B282B;
+      --ink:#E7EEEF; --ink-2:#A3B4B8; --ink-3:#7E9095;
+      --rule:#26363A; --rule-strong:#35494E;
+      --accent:#54C2CE; --accent-soft:#123339; --accent-line:#26545C;
+      --warn:#E2A755; --warn-soft:#2E2411; --warn-line:#5A4520;
+      --crit:#E88175; --crit-soft:#331B18; --crit-line:#5E322C;
+      --ok:#74C391; --ok-soft:#152D1F; --ok-line:#2C5138;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0F1719; --surface:#162124; --surface-2:#1B282B;
+    --ink:#E7EEEF; --ink-2:#A3B4B8; --ink-3:#7E9095;
+    --rule:#26363A; --rule-strong:#35494E;
+    --accent:#54C2CE; --accent-soft:#123339; --accent-line:#26545C;
+    --warn:#E2A755; --warn-soft:#2E2411; --warn-line:#5A4520;
+    --crit:#E88175; --crit-soft:#331B18; --crit-line:#5E322C;
+    --ok:#74C391; --ok-soft:#152D1F; --ok-line:#2C5138;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+  :root[data-theme="light"]{
+    --paper:#F7F8F8; --surface:#FFFFFF; --surface-2:#FBFCFC;
+    --ink:#16242A; --ink-2:#4A5A60; --ink-3:#6E7F84;
+    --rule:#DCE3E4; --rule-strong:#C3CFD1;
+    --accent:#0E6B77; --accent-soft:#E4F0F1; --accent-line:#9CC7CC;
+    --warn:#9C6614; --warn-soft:#FAF0DD; --warn-line:#E0BE85;
+    --crit:#9E352D; --crit-soft:#FAE7E5; --crit-line:#E2A9A3;
+    --ok:#356B48; --ok-soft:#E3F0E8; --ok-line:#A2C7AF;
+    --shadow:0 1px 2px rgba(22,36,42,.05), 0 8px 24px -16px rgba(22,36,42,.28);
+  }
+
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:60rem; margin:0 auto; padding:3rem 1.5rem 6rem;}
+  .col{max-width:44rem;}
+
+  h1,h2,h3,h4{font-family:var(--font-display); text-wrap:balance; line-height:1.2; font-weight:600;}
+  h1{font-size:clamp(2rem,1.4rem + 2.4vw,3rem); letter-spacing:-.015em; margin:0;}
+  h2{font-size:1.6rem; margin:0;}
+  h3{font-size:1.18rem; margin:0;}
+  h4{font-size:1rem; font-family:var(--font-body); font-weight:650; margin:0;}
+  p,ul,ol{margin:0;}
+  ul,ol{padding-left:1.25rem;}
+  li{margin-block:.3rem;}
+  strong{font-weight:650;}
+  a{color:var(--accent);}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px;}
+
+  .eyebrow{
+    font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-3); font-weight:650;
+  }
+  code,.mono{font-family:var(--font-mono); font-size:.86em;}
+  p code,li code,td code{
+    background:var(--surface-2); border:1px solid var(--rule);
+    padding:.08em .34em; border-radius:4px; white-space:nowrap;
+  }
+
+  header.head{
+    display:flex; flex-direction:column; gap:1rem;
+    padding-bottom:2rem; border-bottom:2px solid var(--ink);
+  }
+  .meta{display:flex; flex-wrap:wrap; gap:.4rem 1.5rem; font-size:.85rem; color:var(--ink-2);}
+  .meta span{display:flex; gap:.4rem;}
+  .meta b{color:var(--ink); font-weight:600;}
+
+  section{
+    display:flex; flex-direction:column; gap:1.15rem;
+    padding-block:2.75rem; border-bottom:1px solid var(--rule);
+  }
+  section:last-of-type{border-bottom:0;}
+  .sec-head{display:flex; flex-direction:column; gap:.35rem;}
+
+  .toc{
+    background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+    padding:1.25rem 1.5rem; margin-top:2rem;
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:.4rem 2rem;
+  }
+  .toc a{
+    text-decoration:none; color:var(--ink-2); font-size:.9rem;
+    display:flex; gap:.6rem; padding:.15rem 0;
+  }
+  .toc a:hover{color:var(--accent);}
+  .toc a b{color:var(--ink-3); font-variant-numeric:tabular-nums; font-weight:600; min-width:1.2rem;}
+
+  /* Callouts */
+  .note{
+    border-left:3px solid var(--accent-line); background:var(--accent-soft);
+    padding:.9rem 1.1rem; border-radius:0 6px 6px 0;
+    display:flex; flex-direction:column; gap:.5rem;
+  }
+  .note.warn{border-left-color:var(--warn-line); background:var(--warn-soft);}
+  .note.crit{border-left-color:var(--crit-line); background:var(--crit-soft);}
+  .note .label{
+    font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:var(--accent);
+  }
+  .note.warn .label{color:var(--warn);}
+  .note.crit .label{color:var(--crit);}
+
+  /* Tables */
+  .scroll{overflow-x:auto; border:1px solid var(--rule); border-radius:8px; background:var(--surface);}
+  table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:32rem;}
+  th,td{text-align:left; padding:.62rem .85rem; border-bottom:1px solid var(--rule); vertical-align:top;}
+  thead th{
+    background:var(--surface-2); font-size:.74rem; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--ink-3); font-weight:700; white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:0;}
+  td.num,th.num{font-variant-numeric:tabular-nums; white-space:nowrap;}
+
+  /* Status pills */
+  .pill{
+    display:inline-flex; align-items:center; gap:.35rem; white-space:nowrap;
+    font-size:.74rem; font-weight:650; letter-spacing:.02em;
+    padding:.16rem .5rem; border-radius:999px; border:1px solid;
+  }
+  .pill.crit{color:var(--crit); background:var(--crit-soft); border-color:var(--crit-line);}
+  .pill.warn{color:var(--warn); background:var(--warn-soft); border-color:var(--warn-line);}
+  .pill.ok{color:var(--ok); background:var(--ok-soft); border-color:var(--ok-line);}
+  .pill.acc{color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line);}
+
+  /* Message blocks */
+  .msg{
+    background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  .msg-head{
+    display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+    padding:.55rem .85rem; border-bottom:1px solid var(--rule); background:var(--surface-2);
+  }
+  .lang{
+    font-family:var(--font-mono); font-size:.7rem; font-weight:700; letter-spacing:.08em;
+    color:var(--accent); background:var(--accent-soft);
+    border:1px solid var(--accent-line); border-radius:4px; padding:.1rem .38rem;
+  }
+  .msg-head .who{font-size:.78rem; color:var(--ink-3); font-weight:600;}
+  .msg-body{padding:.9rem 1.1rem; white-space:pre-wrap; font-size:.95rem; line-height:1.6;}
+  button.copy{
+    margin-left:auto; font:inherit; font-size:.74rem; font-weight:600;
+    color:var(--ink-2); background:transparent; border:1px solid var(--rule-strong);
+    border-radius:5px; padding:.14rem .5rem; cursor:pointer;
+  }
+  button.copy:hover{color:var(--accent); border-color:var(--accent-line); background:var(--accent-soft);}
+  .pair{display:flex; flex-direction:column; gap:.6rem;}
+
+  /* Flow diagram */
+  pre.flow{
+    font-family:var(--font-mono); font-size:.78rem; line-height:1.45;
+    background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+    padding:1.1rem; overflow-x:auto; color:var(--ink-2);
+  }
+
+  /* Field list */
+  dl.fields{display:grid; grid-template-columns:1fr; gap:0; margin:0;}
+  .field{
+    display:grid; grid-template-columns:minmax(9rem,12rem) 1fr; gap:.2rem 1rem;
+    padding:.6rem 0; border-bottom:1px solid var(--rule); align-items:baseline;
+  }
+  .field:last-child{border-bottom:0;}
+  .field dt{font-family:var(--font-mono); font-size:.84rem; color:var(--accent); font-weight:600;}
+  .field dd{margin:0; font-size:.9rem; color:var(--ink-2);}
+  @media (max-width:34rem){ .field{grid-template-columns:1fr;} }
+
+  ol.steps{counter-reset:s; list-style:none; padding:0; display:flex; flex-direction:column; gap:.55rem;}
+  ol.steps li{
+    counter-increment:s; display:grid; grid-template-columns:1.7rem 1fr; gap:.75rem;
+    align-items:baseline; margin:0;
+  }
+  ol.steps li::before{
+    content:counter(s); font-family:var(--font-mono); font-size:.78rem; font-weight:700;
+    color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent-line);
+    border-radius:5px; text-align:center; padding:.1rem 0;
+  }
+
+  .rule-card{
+    border:1px solid var(--rule); border-left:3px solid var(--crit-line);
+    background:var(--surface); border-radius:0 8px 8px 0; padding:1rem 1.15rem;
+    display:flex; flex-direction:column; gap:.4rem;
+  }
+  .rule-card .n{font-family:var(--font-mono); font-size:.74rem; font-weight:700; color:var(--crit);}
+  .stack{display:flex; flex-direction:column; gap:1.15rem;}
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); gap:.9rem;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important;}}
+</style>
+
+<div class="wrap">
+
+<header class="head">
+  <div class="eyebrow">Техническое задание · передаётся отделу разработки</div>
+  <h1>Чат-бот SunLand</h1>
+  <p class="col" style="font-size:1.08rem; color:var(--ink-2);">Автоматизация входящих обращений из рекламы в Messenger и Instagram Direct. Бот квалифицирует обращение, отвечает на типовые вопросы, собирает контакт и передаёт менеджеру. Документ самодостаточен — все тексты, поля и правила внутри.</p>
+  <div class="meta">
+    <span>Версия <b>1.0</b></span>
+    <span>Дата <b>31.07.2026</b></span>
+    <span>Платформа <b>ManyChat</b></span>
+    <span>Языки <b>RU + RO</b></span>
+    <span>Страница FB <b class="mono">287227294469844</b></span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Содержание">
+  <a href="#s1"><b>1</b> Задача и метрика успеха</a>
+  <a href="#s2"><b>2</b> Жёсткие бизнес-правила</a>
+  <a href="#s3"><b>3</b> Прайс и смены</a>
+  <a href="#s4"><b>4</b> Модель данных</a>
+  <a href="#s5"><b>5</b> Теги</a>
+  <a href="#s6"><b>6</b> Триггеры входа</a>
+  <a href="#s7"><b>7</b> Карта диалога</a>
+  <a href="#s8"><b>8</b> Тексты диалога</a>
+  <a href="#s9"><b>9</b> FAQ</a>
+  <a href="#s10"><b>10</b> Возражения</a>
+  <a href="#s11"><b>11</b> Передача менеджеру</a>
+  <a href="#s12"><b>12</b> Пограничные случаи</a>
+  <a href="#s13"><b>13</b> Ограничение платформы</a>
+  <a href="#s14"><b>14</b> Порядок внедрения</a>
+  <a href="#s15"><b>15</b> Открытые вопросы</a>
+</nav>
+
+<!-- 1 -->
+<section id="s1">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 1</div>
+    <h2>Задача и метрика успеха</h2>
+  </div>
+  <p class="col">За последние 30 дней реклама привела <b>923 начатых переписки</b>, из которых квалифицированными лидами стали <b>513</b>. То есть <b>44 % оплаченных диалогов умирают внутри переписки</b>. Бот делается ради этой цифры, а не ради автоматизации как таковой.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Метрика</th><th class="num">Сейчас</th><th class="num">Цель</th></tr></thead>
+      <tbody>
+        <tr><td>Переписка → квалифицированный лид</td><td class="num">55,6 %</td><td class="num"><b>70 %</b></td></tr>
+        <tr><td>Время до первого ответа</td><td class="num">не измеряется</td><td class="num"><b>&lt; 5 сек, 24/7</b></td></tr>
+        <tr><td>Диалоги с зафиксированной причиной отвала</td><td class="num">0 %</td><td class="num"><b>100 %</b></td></tr>
+        <tr><td>Доля передач живому менеджеру</td><td class="num">не измеряется</td><td class="num">25–35 %</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="col">Рост конверсии с 55,6 % до 70 % при текущем объёме даёт <b>+133 лида в месяц</b> без единого дополнительного доллара в рекламу.</p>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 2</div>
+    <h2>Жёсткие бизнес-правила</h2>
+    <p class="col" style="color:var(--ink-2);">Нарушение любого из трёх правил ниже — блокирующий дефект, а не замечание.</p>
+  </div>
+
+  <div class="stack">
+    <div class="rule-card">
+      <div class="n">ПРАВИЛО 1</div>
+      <h4>Бот ничего не подтверждает</h4>
+      <p>Бот <b>не бронирует место</b>, <b>не назначает визит</b>, <b>не согласует дату приезда</b> и не даёт никаких обязательств от имени лагеря. Он собирает данные и передаёт менеджеру. Любое подтверждение делает менеджер по телефону.</p>
+      <p style="color:var(--ink-2); font-size:.9rem;">Формулировки вида «место забронировано», «держим за вами», «записал вас на 12-е» в текстах бота запрещены.</p>
+    </div>
+    <div class="rule-card">
+      <div class="n">ПРАВИЛО 2</div>
+      <h4>Визиты — только через менеджера по телефону</h4>
+      <p>Никакой приезд на территорию не планируется и не подтверждается ботом. Менеджер планирует и утверждает визит голосом. Бот на такие вопросы отвечает шаблоном и запрашивает номер телефона.</p>
+    </div>
+    <div class="rule-card">
+      <div class="n">ПРАВИЛО 3</div>
+      <h4>Бот не выдумывает фактов</h4>
+      <p>Отвечает только тем, что явно есть в этом документе: цены, даты смен, возраст, режим гаджетов, правила визитов, локация. <b>Всё остальное — переадресация менеджеру на телефон.</b> Гипотезы, догадки и «обычно бывает так» недопустимы.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <div class="label">Универсальный ответ на всё, чего бот не знает</div>
+    <div class="pair">
+      <div class="msg">
+        <div class="msg-head"><span class="lang">RU</span><span class="who">Переадресация</span><button class="copy" type="button">Копировать</button></div>
+        <div class="msg-body">Это менеджер расскажет точнее — он ответит по телефону.
+
+Оставь, пожалуйста, номер, и он позвонит 👇</div>
+      </div>
+      <div class="msg">
+        <div class="msg-head"><span class="lang">RO</span><span class="who">Redirecționare</span><button class="copy" type="button">Копировать</button></div>
+        <div class="msg-body">Managerul îți spune mai exact — el răspunde la telefon.
+
+Lasă-ne, te rog, numărul și te sună 👇</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 3</div>
+    <h2>Прайс и смены · сезон 2026</h2>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Смена</th><th>Статус</th><th class="num">Цена</th><th class="num">В день</th><th>Примечание</th></tr></thead>
+      <tbody>
+        <tr><td><b>2–8 августа</b></td><td><span class="pill crit">Мест нет</span></td><td class="num">—</td><td class="num">—</td><td>Использовать как доказательство спроса</td></tr>
+        <tr><td><b>9–15 августа</b></td><td><span class="pill warn">Последние места</span></td><td class="num"><b>5 850 лей</b><br><span style="color:var(--ink-3); font-size:.85em;">вместо 6 500</span></td><td class="num">836 лей</td><td>Скидка 650 лей</td></tr>
+        <tr><td><b>16–22 августа</b></td><td><span class="pill ok">Есть места</span></td><td class="num"><b>5 500 лей</b></td><td class="num">786 лей</td><td>Последняя смена сезона</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="col">Цена за 7 дней / 6 ночей. Включено: проживание, 5-разовое питание, вся программа, присмотр 24/7, медработник на территории.</p>
+  <div class="note warn">
+    <div class="label">Обязательно к реализации</div>
+    <p>Прайс меняется в течение сезона. <b>Цены и статусы смен не зашивать в тексты сообщений жёстко</b> — вынести в отдельный редактируемый блок (Custom Field или единый флоу-источник), чтобы менеджер мог править их без разработчика.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 4</div>
+    <h2>Модель данных · Custom Fields</h2>
+    <p class="col" style="color:var(--ink-2);">Создать до сборки флоу. ManyChat → Settings → Fields → User Fields.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead>
+      <tbody>
+        <tr><td><code>child_age</code></td><td>Number</td><td>Возраст ребёнка. Основа главной развилки. Тип обязательно Number, иначе условие не сработает</td></tr>
+        <tr><td><code>child_name</code></td><td>Text</td><td>Имя ребёнка</td></tr>
+        <tr><td><code>parent_name</code></td><td>Text</td><td>Имя родителя</td></tr>
+        <tr><td><code>parent_phone</code></td><td>Text</td><td>Телефон. Ввод через User Input типа Phone</td></tr>
+        <tr><td><code>city</code></td><td>Text</td><td>Город — для вопроса о трансфере</td></tr>
+        <tr><td><code>chosen_session</code></td><td>Text</td><td>Выбранная смена</td></tr>
+        <tr><td><code>lang</code></td><td>Text</td><td><code>ru</code> или <code>ro</code></td></tr>
+        <tr><td><code>entry_keyword</code></td><td>Text</td><td>Точка входа: ключевое слово или <code>ref</code>-метка объявления</td></tr>
+        <tr><td><code>entry_hour</code></td><td>Number</td><td>Час начала диалога — для сверки с почасовой статистикой рекламы</td></tr>
+        <tr><td><code>drop_reason</code></td><td>Text</td><td><b>Причина отвала.</b> Ключевое поле проекта</td></tr>
+        <tr><td><code>last_state</code></td><td>Text</td><td>Последнее состояние: S1 / S2 / S3 / S5 / S7</td></tr>
+        <tr><td><code>handed_to_manager</code></td><td>Boolean</td><td>Передан ли менеджеру</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note crit">
+    <div class="label">Логика заполнения drop_reason — читать внимательно</div>
+    <p>Поле проставляется <b>до</b> рискованного шага, а не после. Перед показом цены ставим <code>price_shock</code>; если человек продолжил диалог — перезаписываем на следующее значение. Тот, кто отвалился, остаётся с последним проставленным значением.</p>
+    <p>Обратная логика (писать причину при отвале) <b>не работает</b>: молчащий пользователь не нажмёт ничего, и событие никогда не наступит.</p>
+  </div>
+
+  <h4>Допустимые значения <code>drop_reason</code></h4>
+  <p><code>age_out_of_range</code> · <code>price_shock</code> · <code>no_free_dates</code> · <code>needs_phone_call</code> · <code>went_silent_S1</code> · <code>went_silent_S2</code> · <code>went_silent_S3</code> · <code>converted</code></p>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 5</div>
+    <h2>Теги</h2>
+    <p class="col" style="color:var(--ink-2);">По ним собираются аудитории для рекламы и считается, на каком шаге теряются деньги.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Тег</th><th>Когда ставится</th></tr></thead>
+      <tbody>
+        <tr><td><code>lang_ru</code> / <code>lang_ro</code></td><td>Сразу после определения языка</td></tr>
+        <tr><td><code>qualified_9_18</code></td><td>Возраст прошёл фильтр</td></tr>
+        <tr><td><code>rejected_age</code></td><td>Возраст вне диапазона</td></tr>
+        <tr><td><code>waitlist_next_season</code></td><td>Согласился на уведомление о следующем сезоне</td></tr>
+        <tr><td><code>price_shown</code></td><td>Увидел цену</td></tr>
+        <tr><td><code>booking_started</code></td><td>Начал оставлять данные</td></tr>
+        <tr><td><code>booking_data_complete</code></td><td>Все данные собраны, передан менеджеру</td></tr>
+        <tr><td><code>sent_to_manager</code></td><td>Передан в Live Chat</td></tr>
+        <tr><td><code>objection_price</code> / <code>objection_fear</code> / <code>objection_distance</code></td><td>Высказанное возражение</td></tr>
+        <tr><td><code>night_dialog</code></td><td>Диалог начат с 00:00 до 06:00</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 6</div>
+    <h2>Триггеры входа</h2>
+  </div>
+
+  <h3>6.1 Ключевые слова</h3>
+  <p class="col">Реклама просит написать конкретное слово. Режим совпадения — <b><code>contains</code>, не <code>is</code></b>, иначе «Хочу!» или «хочу место» не сработают.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Правило</th><th>Слова</th><th>Ведёт в</th></tr></thead>
+      <tbody>
+        <tr><td>Вход RU</td><td><code>МЕСТО</code> <code>ХОЧУ</code> <code>ЛЕТО</code> + латиница <code>mesto</code> <code>hochu</code> <code>leto</code></td><td>Flow 01</td></tr>
+        <tr><td>Вход RO</td><td><code>LOC</code> <code>VREAU</code></td><td>Flow 02</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note warn">
+    <div class="label">Регламент</div>
+    <p>Если в новом рекламном креативе появится другое кодовое слово, оно заводится в ManyChat <b>до</b> запуска объявления. Иначе оплаченный трафик уйдёт в Default Reply.</p>
+  </div>
+
+  <h3>6.2 Ref URL и атрибуция</h3>
+  <p class="col">Сейчас в объявлениях стоит голая ссылка <code>https://m.me/287227294469844</code> — источник обращения не определяется. Требуется создать Growth Tool → Ref URL и передать в рекламу ссылки вида:</p>
+  <pre class="flow">https://m.me/287227294469844?ref=bof_ru
+https://m.me/287227294469844?ref=bof_ro
+https://m.me/287227294469844?ref=tof_ru
+https://m.me/287227294469844?ref=tof_ro</pre>
+  <p class="col">Даёт две вещи: бот здоровается сам, не дожидаясь набранного слова — минус один шаг отвала; и в <code>entry_keyword</code> пишется источник, то есть становится видно, <b>какое объявление приносит бронь, а не просто переписку</b>. У рекламного кабинета нет пикселя и сквозной аналитики, поэтому логи бота — единственный доступный источник этих данных.</p>
+
+  <h3>6.3 Default Reply</h3>
+  <p class="col">Обязателен. Сюда попадут все, кто написал не ключевым словом («сколько стоит?», «есть места?»). Логика: <b>ответить на заданный вопрос</b> и увести в блок возраста. Ответ «Я вас не понял» недопустим.</p>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 7</div>
+    <h2>Карта диалога</h2>
+  </div>
+<pre class="flow">     S0  ВХОД ─── определение языка
+      │
+      ▼
+     S1  ВОЗРАСТ РЕБЁНКА
+      ├── 9–18 ──────────────► S2  ВЫБОР СМЕНЫ
+      │                          │
+      │                          ▼
+      │                        S3  ЦЕНА И СОСТАВ
+      │                          ├──► S4  FAQ ────────► возврат в S3
+      │                          ├──► S6  ВОЗРАЖЕНИЕ ─► возврат в S3
+      │                          └──► S5  СБОР КОНТАКТА
+      │                                 │
+      └── вне 9–18 ──► S1-X ОТКАЗ       ▼
+                       + подписка     S7  ПЕРЕДАЧА МЕНЕДЖЕРУ
+                       на сезон         (подтверждает по телефону)
+
+     на любом шаге: S8  ДОЖИМ при молчании (15 мин / 23 ч)</pre>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Из</th><th>Условие</th><th>В</th></tr></thead>
+      <tbody>
+        <tr><td>S0</td><td>язык определён</td><td>S1</td></tr>
+        <tr><td>S1</td><td><code>child_age</code> ≥ 9 И ≤ 18</td><td>S2</td></tr>
+        <tr><td>S1</td><td><code>child_age</code> &lt; 9 или &gt; 18</td><td>S1-X</td></tr>
+        <tr><td>S1</td><td>возраст не назван за 2 попытки</td><td>S2 (не мучить)</td></tr>
+        <tr><td>S2</td><td>смена выбрана</td><td>S3</td></tr>
+        <tr><td>S3</td><td>вопрос из списка известных</td><td>S4 → возврат в S3</td></tr>
+        <tr><td>S3</td><td>вопрос вне списка</td><td>S7</td></tr>
+        <tr><td>S3</td><td>«дорого» / «далеко» / «боюсь»</td><td>S6 → возврат в S3</td></tr>
+        <tr><td>S3</td><td>готов бронировать</td><td>S5</td></tr>
+        <tr><td>S5</td><td>данные собраны</td><td>S7</td></tr>
+        <tr><td>любое</td><td>молчание</td><td>S8</td></tr>
+        <tr><td>любое</td><td>агрессия / спам</td><td>стоп, без ответа по существу</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 8</div>
+    <h2>Тексты диалога</h2>
+    <p class="col" style="color:var(--ink-2);">Копировать дословно. Обращение на «ты» в обоих языках — как в рекламных креативах. Переключаться на «вы» посреди диалога нельзя.</p>
+  </div>
+
+  <h3>S0 · Приветствие</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">S0</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Привет! 🌊 Это SunLand — лагерь на берегу Днестра в Вадул-луй-Водэ.
+Сейчас подберу свободные смены и пришлю цены.
+
+Сколько лет ребёнку?</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">S0</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Salut! 🌊 Aici SunLand — tabăra de pe malul Nistrului, la Vadul lui Vodă.
+Îți găsesc acum turele libere și îți trimit prețurile.
+
+Câți ani are copilul?</div></div>
+  </div>
+
+  <h3>S1 · Возраст подходит</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">S1 · 9–18</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Отлично, это наш формат 👌
+Показать свободные смены?</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">S1 · 9–18</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Super, exact formatul nostru 👌
+Îți arăt turele libere?</div></div>
+  </div>
+
+  <h3>S1-X · Возраст меньше 9</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">S1-X</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">У нас лагерь для детей 9–18 лет — младше пока не берём, это вопрос безопасности на воде и в программе.
+
+Хочешь, запишу тебя, и мы напишем первыми, когда откроем набор на следующий сезон? Ребёнку как раз будет самое время.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">S1-X</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Tabăra noastră e pentru copii de 9–18 ani — mai mici nu luăm, e o chestiune de siguranță la apă și în program.
+
+Vrei să te notez și să-ți scriem primii când deschidem înscrierile pentru sezonul următor? Copilul va avea exact vârsta potrivită.</div></div>
+  </div>
+  <div class="note"><div class="label">Обязательно</div><p>Ветка отказа завершается шагом <b>Recurring Notification</b> и тегом <code>waitlist_next_season</code>. Это единственный законный способ вернуться к человеку через полгода. Отказ обязан собирать контакт — это будущий клиент.</p></div>
+
+  <h3>S2 · Список смен</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">S2</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Смены на август:
+
+🔴 2–8 августа — мест нет, закрыта
+🟡 9–15 августа — последние места, 5 850 лей вместо 6 500
+🟢 16–22 августа — 5 500 лей, последняя смена сезона
+
+Какая подходит?</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">S2</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Turele din august:
+
+🔴 2–8 august — fără locuri, închisă
+🟡 9–15 august — ultimele locuri, 5 850 lei în loc de 6 500
+🟢 16–22 august — 5 500 lei, ultima tură a sezonului
+
+Care ți se potrivește?</div></div>
+  </div>
+
+  <h3>S3 · Карточка смены 9–15 августа</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">S3 · 9–15.08</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Смена 9–15 августа — 5 850 лей вместо 6 500 за 7 дней / 6 ночей.
+Это последние места, и скидка 650 лей действует только на них.
+
+Что входит:
+🏕 Проживание на берегу Днестра
+🏊 3 бассейна, спорт, мастер-классы
+🎉 Тематические вечера: кино, диско, неон-пати
+🍽 5-разовое питание
+🛡 Присмотр 24/7 и медработник на территории
+
+Оставить заявку? Менеджер позвонит и подтвердит место.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">S3 · 9–15.08</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Tura 9–15 august — 5 850 lei în loc de 6 500 pentru 7 zile / 6 nopți.
+Sunt ultimele locuri, iar reducerea de 650 lei e valabilă doar pentru ele.
+
+Ce include:
+🏕 Cazare pe malul Nistrului
+🏊 3 piscine, sport, ateliere
+🎉 Seri tematice: film, disco, neon party
+🍽 5 mese pe zi
+🛡 Supraveghere 24/7 și asistent medical pe teritoriu
+
+Lași o cerere? Managerul te sună și confirmă locul.</div></div>
+  </div>
+
+  <h3>S3 · Карточка смены 16–22 августа</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">S3 · 16–22.08</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Смена 16–22 августа — 5 500 лей за 7 дней / 6 ночей.
+Это последняя смена сезона — дальше до следующего лета.
+
+Что входит:
+🏕 Проживание на берегу Днестра
+🏊 3 бассейна, спорт, мастер-классы
+🎉 Тематические вечера: кино, диско, неон-пати
+🍽 5-разовое питание
+🛡 Присмотр 24/7 и медработник на территории
+
+Оставить заявку? Менеджер позвонит и подтвердит место.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">S3 · 16–22.08</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Tura 16–22 august — 5 500 lei pentru 7 zile / 6 nopți.
+E ultima tură a sezonului — apoi doar vara viitoare.
+
+Ce include:
+🏕 Cazare pe malul Nistrului
+🏊 3 piscine, sport, ateliere
+🎉 Seri tematice: film, disco, neon party
+🍽 5 mese pe zi
+🛡 Supraveghere 24/7 și asistent medical pe teritoriu
+
+Lași o cerere? Managerul te sună și confirmă locul.</div></div>
+  </div>
+
+  <h3>Если спрашивают про закрытую смену 2–8 августа</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Sold out</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Смена 2–8 августа уже полностью занята 🙈 Разобрали её первой.
+
+Остались две:
+🟡 9–15 августа — 5 850 лей вместо 6 500, последние места
+🟢 16–22 августа — 5 500 лей, последняя смена сезона
+
+Какая подходит?</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Sold out</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Tura 2–8 august e deja complet ocupată 🙈 S-a umplut prima.
+
+Au rămas două:
+🟡 9–15 august — 5 850 lei în loc de 6 500, ultimele locuri
+🟢 16–22 august — 5 500 lei, ultima tură a sezonului
+
+Care ți se potrivește?</div></div>
+  </div>
+
+  <h3>S5 · Сбор контакта</h3>
+  <p class="col">По одному полю за сообщение, каждое — отдельный User Input. Порядок: имя ребёнка → имя родителя → телефон (тип Phone) → город.</p>
+  <div class="note crit">
+    <div class="label">Правило 1 в действии</div>
+    <p>Финальное сообщение <b>не подтверждает бронь</b>. Оно фиксирует передачу заявки. Формулировка ниже — обязательная.</p>
+  </div>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">S5 · финал</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Готово ✅ Заявка у менеджера.
+
+Он позвонит тебе на указанный номер, подтвердит место и расскажет всё по оплате и документам.
+
+Место закрепляется только после разговора с менеджером.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">S5 · final</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Gata ✅ Cererea e la manager.
+
+El te sună la numărul indicat, confirmă locul și îți spune tot despre plată și acte.
+
+Locul se rezervă doar după discuția cu managerul.</div></div>
+  </div>
+
+  <h3>S8 · Дожим при молчании</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">через 15 минут</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Ты ещё тут? Могу сразу прислать свободные даты и цены 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">după 15 minute</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Mai ești aici? Îți pot trimite imediat datele libere și prețurile 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">через 23 часа</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Смена 9–15 августа закрывается быстрее остальных — там последние места.
+
+Если ещё актуально, оставь номер, и менеджер позвонит 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">după 23 de ore</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Tura 9–15 august se închide mai repede decât celelalte — acolo sunt ultimele locuri.
+
+Dacă mai e actual, lasă-ne numărul și managerul te sună 👇</div></div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 9</div>
+    <h2>FAQ · только эти вопросы бот отвечает сам</h2>
+    <p class="col" style="color:var(--ink-2);">Всё, чего нет в этом разделе и в разделе 3, уходит менеджеру на телефон по шаблону из раздела 2.</p>
+  </div>
+
+  <h3>Режим гаджетов</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Телефон у ребёнка</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Телефон у ребёнка есть 30 минут в день — это время как раз для связи с тобой. Остальное время он в программе, а не в экране.
+
+А если нужно связаться вне этого окна — в любой момент пишешь или звонишь вожатому, он всегда на связи.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Telefonul copilului</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Copilul are telefonul 30 de minute pe zi — exact acest timp e pentru legătura cu tine. În rest e în program, nu în ecran.
+
+Iar dacă ai nevoie să iei legătura în afara acestui interval — scrii sau suni oricând animatorului, el e mereu disponibil.</div></div>
+  </div>
+  <div class="note">
+    <div class="label">Почему этот блок важен</div>
+    <p>В рекламе стоит обещание «без гаджетов». Оно цепляет родителей, но сразу порождает тревогу «я не смогу связаться с ребёнком». Ответ обязан снимать её в первом же предложении: <b>без гаджетов ≠ без связи</b>.</p>
+  </div>
+
+  <h3>Визиты и приезд</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Визиты</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Любой приезд планируется заранее и только через менеджера — он согласует дату и время по телефону.
+
+Без согласования визиты не принимаем: на территории режим, и мы должны знать, кто и когда приезжает.
+
+Оставь номер — менеджер позвонит и всё спланирует 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Vizite</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Orice vizită se planifică din timp și doar prin manager — el stabilește data și ora la telefon.
+
+Fără această confirmare nu primim vizite: pe teritoriu e un regim și trebuie să știm cine vine și când.
+
+Lasă-ne numărul — managerul te sună și planifică totul 👇</div></div>
+  </div>
+
+  <h3>Возраст</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Возраст</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Принимаем детей от 9 до 18 лет. Группы формируются по возрасту, живут и занимаются отдельно.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Vârsta</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Primim copii de la 9 la 18 ani. Grupele se formează pe vârste, locuiesc și au activități separat.</div></div>
+  </div>
+
+  <h3>Локация</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Где находится</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Вадул-луй-Водэ, на берегу Днестра — недалеко от Кишинёва.
+
+Точный адрес, дорогу и вопрос с трансфером менеджер разберёт с тобой по телефону. Оставь номер 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Unde se află</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Vadul lui Vodă, pe malul Nistrului — nu departe de Chișinău.
+
+Adresa exactă, drumul și transferul le lămurește managerul cu tine la telefon. Lasă-ne numărul 👇</div></div>
+  </div>
+
+  <h3>Почему смена 16–22 дешевле</h3>
+  <p class="col">Вопрос возникнет обязательно: человек видит, что «последние места со скидкой» стоят дороже обычной цены следующей смены. Без готового ответа это читается как обман.</p>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Разница в цене</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">16–22 августа — последняя смена сезона, поэтому она идёт по 5 500.
+
+9–15 августа — самая востребованная, её разбирают быстрее всего. Там остались последние места, и на них действует скидка 650 лей от обычной цены 6 500.
+
+Программа на обеих сменах одна и та же, разница только в датах.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Diferența de preț</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">16–22 august e ultima tură a sezonului, de asta e 5 500.
+
+9–15 august e cea mai căutată, se ocupă cel mai repede. Acolo au rămas ultimele locuri și pentru ele e activă reducerea de 650 lei de la prețul obișnuit de 6 500.
+
+Programul e același la ambele ture, diferă doar datele.</div></div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 10</div>
+    <h2>Возражения</h2>
+    <p class="col" style="color:var(--ink-2);">Правило: не спорить, признать, развернуть в цену дня, вернуть в выбор смены.</p>
+  </div>
+
+  <h3>«Дорого» — на смене 9–15 августа</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Возражение цены</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Понимаю. Смотри, как это выглядит по дням: 5 850 лей за 7 дней — это 836 лей в день на ребёнка. И в эту сумму уже входит проживание, 5-разовое питание, вся программа, присмотр 24/7 и медработник.
+
+Просто прокормить и занять ребёнка неделю обойдётся не сильно дешевле.
+
+А если бюджет впритык — есть смена 16–22 августа за 5 500. Посмотрим её?</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Obiecție preț</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Te înțeleg. Uite cum arată pe zile: 5 850 lei pentru 7 zile înseamnă 836 lei pe zi de copil. Și în sumă intră deja cazarea, 5 mese pe zi, tot programul, supravegherea 24/7 și asistentul medical.
+
+Doar să-l hrănești și să-l ocupi o săptămână nu iese mult mai ieftin.
+
+Iar dacă bugetul e la limită — există tura 16–22 august, la 5 500. O vedem?</div></div>
+  </div>
+
+  <h3>«Дорого» — на смене 16–22 августа</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Возражение цены</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Понимаю. 5 500 лей за 7 дней — это 786 лей в день, вместе с проживанием, пятиразовым питанием и присмотром 24/7. Дешевле смены в этом сезоне у нас нет.
+
+Про варианты оплаты менеджер расскажет по телефону — оставь номер, он позвонит 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Obiecție preț</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Te înțeleg. 5 500 lei pentru 7 zile înseamnă 786 lei pe zi, cu cazare, 5 mese pe zi și supraveghere 24/7. Mai ieftin decât atât nu avem în sezonul ăsta.
+
+Despre variantele de plată îți spune managerul la telefon — lasă-ne numărul și te sună 👇</div></div>
+  </div>
+
+  <h3>«Боюсь отпускать / он первый раз»</h3>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Возражение страха</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Это самый частый вопрос, и он абсолютно нормальный. Первый раз почти всегда тяжелее родителю, чем ребёнку 🙂
+
+В первые дни вожатые держат новеньких особенно близко. И связь есть всегда: у ребёнка 30 минут в день на звонок тебе, а вожатому ты можешь написать в любой момент.
+
+Остальное менеджер разберёт с тобой голосом — оставь номер 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Obiecție teamă</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">E cea mai frecventă întrebare și e absolut normală. Prima dată e aproape întotdeauna mai greu pentru părinte decât pentru copil 🙂
+
+În primele zile animatorii stau deosebit de aproape de cei noi. Iar legătura există mereu: copilul are 30 de minute pe zi să te sune, iar animatorului îi poți scrie oricând.
+
+Restul îl lămurește managerul cu tine la telefon — lasă-ne numărul 👇</div></div>
+  </div>
+
+  <h3>«Надо посоветоваться / я подумаю»</h3>
+  <div class="note crit"><div class="label">Внимание</div><p>Здесь запрещена формулировка «подержим место за вами» — это обещание, которого бот давать не вправе (Правило 1).</p></div>
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Отложенное решение</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Конечно 👍 Скажу только одно: на смене 9–15 августа последние места, и они уходят быстро.
+
+Оставь номер — менеджер позвонит, ответит на всё и скажет, сколько мест осталось на этот момент.</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RO</span><span class="who">Decizie amânată</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Sigur 👍 Îți spun doar un lucru: la tura 9–15 august au rămas ultimele locuri și se ocupă repede.
+
+Lasă-ne numărul — managerul te sună, răspunde la tot și îți spune câte locuri mai sunt în acel moment.</div></div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 11</div>
+    <h2>Передача менеджеру</h2>
+  </div>
+  <h4>Передавать немедленно, если:</h4>
+  <ul class="col">
+    <li>собраны данные заявки (S5 завершён);</li>
+    <li>вопрос про <b>визит или приезд</b> — Правило 2;</li>
+    <li>вопрос про оплату, рассрочку, возврат, документы;</li>
+    <li>вопрос про здоровье ребёнка, аллергию, лекарства;</li>
+    <li>вопрос про проживание, питание, трансфер, вещи;</li>
+    <li>любой вопрос вне раздела 9;</li>
+    <li>клиент дважды переспросил одно и то же;</li>
+    <li>клиент прямо просит человека;</li>
+    <li>агрессия, мат, угрозы.</li>
+  </ul>
+
+  <div class="pair">
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">В рабочее время</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Передаю менеджеру — он ответит точнее и позвонит тебе.
+
+Оставь, пожалуйста, номер телефона 👇</div></div>
+    <div class="msg"><div class="msg-head"><span class="lang">RU</span><span class="who">Нерабочее время</span><button class="copy" type="button">Копировать</button></div><div class="msg-body">Менеджер на связи с {{рабочие_часы}} — он позвонит тебе первым делом.
+
+Оставь номер, чтобы он сразу знал, кому звонить 👇
+А пока могу ответить на всё, что знаю — спрашивай.</div></div>
+  </div>
+
+  <h4>Технические требования к шагу передачи</h4>
+  <ol class="steps">
+    <li>Action <code>Notify Admin</code> — уведомление менеджеру (плюс дублирование в Telegram или на почту).</li>
+    <li>Теги <code>sent_to_manager</code>, поле <code>handed_to_manager = true</code>.</li>
+    <li>Action <b><code>Pause Automation</code></b> — обязательно. Без него бот продолжит писать поверх живого менеджера.</li>
+    <li>Регламент для команды: после завершения разговора менеджер снимает паузу вручную, иначе клиент навсегда выпадает из автоматики.</li>
+    <li>Включить <b>Human Agent tag</b> — он даёт менеджеру 7 дней на ответ вместо 24 часов.</li>
+  </ol>
+  <div class="note warn">
+    <div class="label">Организационное условие</div>
+    <p>Бот обещает звонок менеджера. Если звонка не будет или он придёт через сутки, обещание превращается в ложь и конверсия падает ниже текущей. Уведомления менеджеру должны приходить на телефон, а не только в веб-интерфейс.</p>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 12</div>
+    <h2>Пограничные случаи</h2>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Ситуация</th><th>Поведение</th></tr></thead>
+      <tbody>
+        <tr><td>Голосовое сообщение</td><td>«Не могу послушать голосовое 🙈 Напиши, пожалуйста, текстом»</td></tr>
+        <tr><td>Только эмодзи или стикер</td><td>Повторить последний вопрос другой формулировкой</td></tr>
+        <tr><td>Язык не RU и не RO</td><td>Английский шаблон → передача менеджеру</td></tr>
+        <tr><td>Мат, агрессия</td><td>Один нейтральный ответ → <code>Pause Automation</code>, дальше бот молчит</td></tr>
+        <tr><td>Спам, реклама, ссылки</td><td>Тег <code>spam</code>, без ответа, менеджеру не передавать</td></tr>
+        <tr><td>Двое детей разного возраста</td><td>Обработать обоих, младшего не терять в ветке отказа</td></tr>
+        <tr><td>Вернулся через месяцы</td><td>Не начинать с нуля: проверить <code>chosen_session</code> и сослаться на прошлый диалог</td></tr>
+        <tr><td>Просит забронировать прямо в чате</td><td>Не подтверждать. Ответ: место закрепляет менеджер по телефону → S5</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 13 -->
+<section id="s13">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 13</div>
+    <h2>Ограничение платформы · 24-часовое окно</h2>
+  </div>
+  <div class="note crit">
+    <div class="label">Учесть при проектировании дожима</div>
+    <p>Meta разрешает свободную переписку только <b>24 часа с последнего сообщения пользователя</b>. Дальше стандартная отправка блокируется — ManyChat вернёт ошибку доставки.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Касание</th><th>Внутри окна</th><th>Реализация</th></tr></thead>
+      <tbody>
+        <tr><td>15 минут</td><td><span class="pill ok">Да</span></td><td>Smart Delay 15 min — работает как есть</td></tr>
+        <tr><td>23 часа</td><td><span class="pill warn">На границе</span></td><td>Ставить <b>23 часа</b>, не 24 — иначе упрётся в закрытое окно</td></tr>
+        <tr><td>Позже 24 часов</td><td><span class="pill crit">Нет</span></td><td>Стандартно не отправится. Только через обход ниже</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h4>Легальные способы дотянуться после 24 часов</h4>
+  <ol class="steps">
+    <li><b>Recurring Notifications.</b> Пользователь нажимает кнопку-подписку, после чего разрешена отправка вне окна. Использовать в ветке отказа по возрасту («написать, когда откроем следующий сезон»).</li>
+    <li><b>Human Agent tag — 7 дней.</b> Действует только когда отвечает живой человек из Live Chat, не автоматика.</li>
+    <li><b>Ретаргет-реклама вместо сообщения.</b> Человек попадает в аудиторию <code>BoF · Messenger Openers · 365d</code> — дожимать его рекламой, а не ботом.</li>
+  </ol>
+  <p class="col">Часть возможностей, включая Recurring Notifications, доступна только на платном тарифе ManyChat Pro — проверить тариф до начала работ.</p>
+</section>
+
+<!-- 14 -->
+<section id="s14">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 14</div>
+    <h2>Порядок внедрения</h2>
+    <p class="col" style="color:var(--ink-2);">Пункты 1–8 дают работающего бота на четверти объёма работ. Не собирать всё сразу: запустить ядро, накопить первые 50 диалогов, потом достраивать.</p>
+  </div>
+  <ol class="steps">
+    <li>Подключить страницу Facebook <code>287227294469844</code> и Instagram к ManyChat, проверить тариф.</li>
+    <li>Создать все Custom Fields из раздела 4.</li>
+    <li>Создать все теги из раздела 5.</li>
+    <li>Вынести прайс и статусы смен в редактируемый блок (раздел 3).</li>
+    <li>Собрать ядро: приветствие → возраст → развилка → смены → цена.</li>
+    <li>Настроить ключевые слова и Default Reply (раздел 6).</li>
+    <li>Протестировать оба языка, обязательно проверив ввод «5 лет», «19 лет» и текстом вместо цифры.</li>
+    <li>Настроить Live Chat, <code>Notify Admin</code>, <code>Pause Automation</code> и Human Agent tag.</li>
+    <li>Собрать FAQ, возражения и сбор контакта.</li>
+    <li>Собрать дожим 15 минут и 23 часа + Recurring Notification в ветке отказа.</li>
+    <li>Создать Ref URL Growth Tool, передать заказчику ссылки для замены в рекламных объявлениях.</li>
+    <li>Собрать пограничные случаи (раздел 12).</li>
+    <li>Сдать заказчику отчёт по метрикам раздела 1 на первой неделе работы.</li>
+  </ol>
+
+  <h4>Что смотреть в первые две недели</h4>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Вопрос</th><th>Как считать</th></tr></thead>
+      <tbody>
+        <tr><td>Сколько отваливается по возрасту</td><td>Доля тега <code>rejected_age</code> от всех входов</td></tr>
+        <tr><td>Цена пугает или нет</td><td>Переход <code>price_shown</code> → <code>booking_started</code></td></tr>
+        <tr><td>На каком шаге умирает диалог</td><td>Распределение <code>last_state</code> среди тех, у кого нет <code>booking_data_complete</code></td></tr>
+        <tr><td>Работает ли ночь</td><td>Конверсия тега <code>night_dialog</code> против дневных диалогов</td></tr>
+        <tr><td>Какое объявление приносит заявку</td><td><code>entry_keyword</code> в разрезе <code>booking_data_complete</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 15 -->
+<section id="s15">
+  <div class="sec-head">
+    <div class="eyebrow">Раздел 15</div>
+    <h2>Открытые вопросы к заказчику</h2>
+    <p class="col" style="color:var(--ink-2);">Не блокируют запуск ядра: по текущему решению эти темы уходят менеджеру на телефон. Но каждый заполненный пункт — это диалог, который бот закроет сам, без ожидания звонка.</p>
+  </div>
+  <div class="grid2">
+    <div class="rule-card" style="border-left-color:var(--accent-line);">
+      <div class="n" style="color:var(--accent);">ТРЕБУЕТСЯ</div>
+      <h4>Рабочие часы менеджера</h4>
+      <p style="font-size:.9rem; color:var(--ink-2);">Подставляется в <code>{{рабочие_часы}}</code>. Нужны реальные, а не желаемые — бот обещает звонок именно в этом окне.</p>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--accent-line);">
+      <div class="n" style="color:var(--accent);">ЖЕЛАТЕЛЬНО</div>
+      <h4>Оплата и предоплата</h4>
+      <p style="font-size:.9rem; color:var(--ink-2);">Способы, размер предоплаты, условия возврата. Сейчас — только по телефону.</p>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--accent-line);">
+      <div class="n" style="color:var(--accent);">ЖЕЛАТЕЛЬНО</div>
+      <h4>Безопасность</h4>
+      <p style="font-size:.9rem; color:var(--ink-2);">Соотношение вожатых к детям, режим охраны. Главное возражение родителя — чем раньше бот его снимет, тем выше конверсия.</p>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--accent-line);">
+      <div class="n" style="color:var(--accent);">ЖЕЛАТЕЛЬНО</div>
+      <h4>Трансфер и проживание</h4>
+      <p style="font-size:.9rem; color:var(--ink-2);">80 % аудитории — Кишинёв, ещё 10 % — ближний пояс. Ответ про трансфер из Кишинёва будет самым частым.</p>
+    </div>
+  </div>
+  <div class="note warn">
+    <div class="label">Отдельно: вычитка румынского</div>
+    <p>Румынские тексты в этом документе написаны без участия носителя языка. Румынская ветка даёт <b>59 % рекламного расхода</b> и цену обращения на 14 % ниже русской — вычитку носителем перед запуском стоит считать обязательной.</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+  document.querySelectorAll('button.copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var body = btn.closest('.msg').querySelector('.msg-body');
+      navigator.clipboard.writeText(body.textContent).then(function(){
+        var prev = btn.textContent;
+        btn.textContent = 'Скопировано';
+        setTimeout(function(){ btn.textContent = prev; }, 1600);
+      }).catch(function(){
+        btn.textContent = 'Не вышло';
+        setTimeout(function(){ btn.textContent = 'Копировать'; }, 1600);
+      });
+    });
+  });
+</script>
